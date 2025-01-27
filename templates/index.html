@@ -23,7 +23,6 @@
             background: #fff;
         }
         .node {
-            fill: #69b3a2;
             stroke: #fff;
             stroke-width: 2px;
         }
@@ -56,7 +55,6 @@
         }
         .node:hover {
             cursor: pointer;
-            fill: #45a049;
         }
         input, button {
             margin: 5px 0;
@@ -88,6 +86,41 @@
             padding: 8px;
             width: 100%;
         }
+        .node-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            max-width: 250px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        #node-details-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+        }
+        .modal-content input, .modal-content textarea {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
     </style>
 </head>
 <body>
@@ -118,11 +151,27 @@
     </div>
     <div id="graph-container"></div>
 
+    <!-- Node Details Modal -->
+    <div id="node-details-modal">
+        <div class="modal-content">
+            <h2>Node Details</h2>
+            <input type="text" id="node-details-label" placeholder="Node Label" disabled>
+            <input type="text" id="node-details-author" placeholder="Author">
+            <input type="text" id="node-details-date" placeholder="Date">
+            <input type="text" id="node-details-source-urls" placeholder="Source URLs (comma-separated)">
+            <textarea id="node-details-description" placeholder="Description"></textarea>
+            <button onclick="saveNodeDetails()">Save Details</button>
+            <button onclick="closeNodeDetailsModal()">Cancel</button>
+        </div>
+    </div>
+
     <script>
         let simulation;
         const width = window.innerWidth - 300;
         const height = window.innerHeight;
         let contextMenu = null;
+        let currentNodeId = null;
+        let tooltip = null;
 
         // Create context menu
         function createContextMenu(x, y, nodeId) {
@@ -172,10 +221,104 @@
             });
         }
 
+        function showNodeTooltip(event, node) {
+            // Remove any existing tooltip
+            if (tooltip) {
+                tooltip.remove();
+            }
+
+            // Create tooltip
+            tooltip = document.createElement('div');
+            tooltip.className = 'node-tooltip';
+            
+            // Prepare tooltip content
+            const details = node.details || {};
+            const tooltipContent = `
+                <strong>${node.label}</strong><br>
+                ${details.author ? `Author: ${details.author}<br>` : ''}
+                ${details.date ? `Date: ${details.date}<br>` : ''}
+                ${details.description ? `Description: ${details.description}` : ''}
+            `;
+            
+            tooltip.innerHTML = tooltipContent;
+            
+            // Position tooltip
+            tooltip.style.left = `${event.pageX + 10}px`;
+            tooltip.style.top = `${event.pageY + 10}px`;
+            
+            document.body.appendChild(tooltip);
+        }
+
+        function hideNodeTooltip() {
+            if (tooltip) {
+                tooltip.remove();
+                tooltip = null;
+            }
+        }
+
+        function openNodeDetailsModal(nodeId, node) {
+            currentNodeId = nodeId;
+            const modal = document.getElementById('node-details-modal');
+            const details = node.details || {};
+
+            document.getElementById('node-details-label').value = node.label;
+            document.getElementById('node-details-author').value = details.author || '';
+            document.getElementById('node-details-date').value = details.date || '';
+            document.getElementById('node-details-source-urls').value = (details.source_urls || []).join(', ');
+            document.getElementById('node-details-description').value = details.description || '';
+
+            modal.style.display = 'block';
+        }
+
+        function closeNodeDetailsModal() {
+            const modal = document.getElementById('node-details-modal');
+            modal.style.display = 'none';
+            currentNodeId = null;
+        }
+
+        function saveNodeDetails() {
+            if (!currentNodeId) return;
+
+            const details = {
+                author: document.getElementById('node-details-author').value.trim(),
+                date: document.getElementById('node-details-date').value.trim(),
+                source_urls: document.getElementById('node-details-source-urls').value.split(',').map(url => url.trim()).filter(url => url),
+                description: document.getElementById('node-details-description').value.trim()
+            };
+
+            fetch('/api/node/details', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    node_id: currentNodeId,
+                    details: details
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateGraph();
+                    closeNodeDetailsModal();
+                }
+            });
+        }
+
         const svg = d3.select("#graph-container")
             .append("svg")
             .attr("width", width)
             .attr("height", height);
+
+        // Function to generate a random color
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
 
         function updateGraph() {
             removeContextMenu();  // Remove any existing context menu
@@ -206,8 +349,16 @@
                         .data(data.nodes)
                         .enter()
                         .append("circle")
-                        .attr("class", "node")
                         .attr("r", 10)
+                        .attr("class", "node")
+                        .style("fill", d => getRandomColor())
+                        .on("mouseover", function(event, d) {
+                            showNodeTooltip(event, d);
+                        })
+                        .on("mouseout", hideNodeTooltip)
+                        .on("dblclick", function(event, d) {
+                            openNodeDetailsModal(d.id, d);
+                        })
                         .on("contextmenu", function(event, d) {
                             event.preventDefault();
                             createContextMenu(event.pageX, event.pageY, d.id);
@@ -217,32 +368,36 @@
                             .on("drag", dragged)
                             .on("end", dragended));
 
-                    // Add labels
+                    // Add labels to nodes
                     const labels = svg.append("g")
                         .selectAll("text")
                         .data(data.nodes)
                         .enter()
                         .append("text")
-                        .attr("class", "node-label")
                         .text(d => d.label)
-                        .attr("dx", 12)
-                        .attr("dy", 4);
+                        .attr("class", "node-label")
+                        .attr("text-anchor", "middle")
+                        .attr("dy", -15);
 
-                    simulation.on("tick", () => {
-                        links
-                            .attr("x1", d => d.source.x)
-                            .attr("y1", d => d.source.y)
-                            .attr("x2", d => d.target.x)
-                            .attr("y2", d => d.target.y);
+                    // Update simulation
+                    simulation.nodes(data.nodes)
+                        .on("tick", () => {
+                            links
+                                .attr("x1", d => d.source.x)
+                                .attr("y1", d => d.source.y)
+                                .attr("x2", d => d.target.x)
+                                .attr("y2", d => d.target.y);
 
-                        nodes
-                            .attr("cx", d => d.x)
-                            .attr("cy", d => d.y);
+                            nodes
+                                .attr("cx", d => d.x)
+                                .attr("cy", d => d.y);
 
-                        labels
-                            .attr("x", d => d.x)
-                            .attr("y", d => d.y);
-                    });
+                            labels
+                                .attr("x", d => d.x)
+                                .attr("y", d => d.y);
+                        });
+
+                    simulation.force("link").links(data.edges);
                 });
         }
 

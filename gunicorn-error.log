@@ -1,0 +1,53 @@
+[2025-01-26 20:37:32 -0800] [120312] [INFO] Starting gunicorn 23.0.0
+[2025-01-26 20:37:32 -0800] [120312] [INFO] Listening at: http://0.0.0.0:8000 (120312)
+[2025-01-26 20:37:32 -0800] [120312] [INFO] Using worker: sync
+[2025-01-26 20:37:32 -0800] [120313] [INFO] Booting worker with pid: 120313
+[2025-01-26 20:37:32 -0800] [120314] [INFO] Booting worker with pid: 120314
+[2025-01-26 20:37:32 -0800] [120315] [INFO] Booting worker with pid: 120315
+[2025-01-26 20:37:32 -0800] [120316] [INFO] Booting worker with pid: 120316
+[2025-01-26 20:38:19 -0800] [120314] [INFO] Worker exiting (pid: 120314)
+[2025-01-26 20:38:19 -0800] [120313] [INFO] Worker exiting (pid: 120313)
+[2025-01-26 20:38:19 -0800] [120316] [INFO] Worker exiting (pid: 120316)
+[2025-01-26 20:38:19 -0800] [120315] [INFO] Worker exiting (pid: 120315)
+[2025-01-26 20:38:19 -0800] [120312] [INFO] Handling signal: term
+[2025-01-26 20:38:19 -0800] [120312] [ERROR] Worker (pid:120314) was sent SIGTERM!
+[2025-01-26 20:38:19 -0800] [120312] [ERROR] Worker (pid:120315) was sent SIGTERM!
+[2025-01-26 20:38:19 -0800] [120312] [INFO] Shutting down: Master
+[2025-01-26 20:38:25 -0800] [120857] [INFO] Starting gunicorn 23.0.0
+[2025-01-26 20:38:25 -0800] [120857] [INFO] Listening at: http://0.0.0.0:8000 (120857)
+[2025-01-26 20:38:25 -0800] [120857] [INFO] Using worker: sync
+[2025-01-26 20:38:25 -0800] [120858] [INFO] Booting worker with pid: 120858
+[2025-01-26 20:38:25 -0800] [120868] [INFO] Booting worker with pid: 120868
+[2025-01-26 20:38:25 -0800] [120869] [INFO] Booting worker with pid: 120869
+[2025-01-26 20:38:25 -0800] [120870] [INFO] Booting worker with pid: 120870
+[2025-01-26 20:39:09 -0800] [120857] [INFO] Handling signal: int
+[2025-01-26 20:39:09 -0800] [120870] [INFO] Worker exiting (pid: 120870)
+[2025-01-26 20:39:09 -0800] [120869] [INFO] Worker exiting (pid: 120869)
+[2025-01-26 20:39:09 -0800] [120868] [INFO] Worker exiting (pid: 120868)
+[2025-01-26 20:39:09 -0800] [120858] [INFO] Worker exiting (pid: 120858)
+[2025-01-26 20:39:10 -0800] [120857] [INFO] Shutting down: Master
+[2025-01-26 20:39:12 -0800] [121182] [INFO] Starting gunicorn 23.0.0
+[2025-01-26 20:39:12 -0800] [121182] [INFO] Listening at: http://0.0.0.0:8000 (121182)
+[2025-01-26 20:39:12 -0800] [121182] [INFO] Using worker: sync
+[2025-01-26 20:39:12 -0800] [121183] [INFO] Booting worker with pid: 121183
+[2025-01-26 20:39:12 -0800] [121184] [INFO] Booting worker with pid: 121184
+[2025-01-26 20:39:12 -0800] [121185] [INFO] Booting worker with pid: 121185
+[2025-01-26 20:39:12 -0800] [121186] [INFO] Booting worker with pid: 121186
+[2025-01-26 20:39:52 -0800] [121376] [INFO] Starting gunicorn 23.0.0
+[2025-01-26 20:39:52 -0800] [121376] [ERROR] Connection in use: ('0.0.0.0', 8000)
+[2025-01-26 20:39:52 -0800] [121376] [ERROR] connection to ('0.0.0.0', 8000) failed: [Errno 98] Address already in use
+[2025-01-26 20:39:53 -0800] [121376] [ERROR] Connection in use: ('0.0.0.0', 8000)
+[2025-01-26 20:39:53 -0800] [121376] [ERROR] connection to ('0.0.0.0', 8000) failed: [Errno 98] Address already in use
+[2025-01-26 20:39:54 -0800] [121376] [ERROR] Connection in use: ('0.0.0.0', 8000)
+[2025-01-26 20:39:54 -0800] [121376] [ERROR] connection to ('0.0.0.0', 8000) failed: [Errno 98] Address already in use
+[2025-01-26 20:39:55 -0800] [121376] [ERROR] Connection in use: ('0.0.0.0', 8000)
+[2025-01-26 20:39:55 -0800] [121376] [ERROR] connection to ('0.0.0.0', 8000) failed: [Errno 98] Address already in use
+[2025-01-26 20:39:56 -0800] [121376] [ERROR] Connection in use: ('0.0.0.0', 8000)
+[2025-01-26 20:39:56 -0800] [121376] [ERROR] connection to ('0.0.0.0', 8000) failed: [Errno 98] Address already in use
+[2025-01-26 20:39:57 -0800] [121182] [INFO] Handling signal: int
+[2025-01-26 20:39:57 -0800] [121184] [INFO] Worker exiting (pid: 121184)
+[2025-01-26 20:39:57 -0800] [121183] [INFO] Worker exiting (pid: 121183)
+[2025-01-26 20:39:57 -0800] [121186] [INFO] Worker exiting (pid: 121186)
+[2025-01-26 20:39:57 -0800] [121185] [INFO] Worker exiting (pid: 121185)
+[2025-01-26 20:39:57 -0800] [121182] [INFO] Shutting down: Master
+[2025-01-26 20:39:57 -0800] [121376] [ERROR] Can't connect to ('0.0.0.0', 8000)

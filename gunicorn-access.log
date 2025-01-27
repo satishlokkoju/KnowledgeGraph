@@ -1,0 +1,6 @@
+127.0.0.1 - - [26/Jan/2025:20:37:48 -0800] "GET / HTTP/1.1" 200 18016 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+127.0.0.1 - - [26/Jan/2025:20:37:48 -0800] "GET /api/graphs HTTP/1.1" 200 25 "http://localhost:8000/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+127.0.0.1 - - [26/Jan/2025:20:37:48 -0800] "GET /api/nodes HTTP/1.1" 200 24 "http://localhost:8000/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+127.0.0.1 - - [26/Jan/2025:20:37:48 -0800] "GET /favicon.ico HTTP/1.1" 404 207 "http://localhost:8000/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+127.0.0.1 - - [26/Jan/2025:20:37:50 -0800] "POST /api/load/MindSpace HTTP/1.1" 200 21 "http://localhost:8000/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+127.0.0.1 - - [26/Jan/2025:20:37:50 -0800] "GET /api/nodes HTTP/1.1" 200 806 "http://localhost:8000/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
