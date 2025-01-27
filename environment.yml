@@ -1,0 +1,10 @@
+name: knowledge-graph
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - flask=3.0.0
+  - networkx=3.2
+  - python-dotenv=1.0.0
+  - pip

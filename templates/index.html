@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Journey Knowledge Graph</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+        }
+        #sidebar {
+            width: 300px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-right: 1px solid #ddd;
+        }
+        #graph-container {
+            flex-grow: 1;
+            background: #fff;
+        }
+        .node {
+            fill: #69b3a2;
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+        .link {
+            stroke: #999;
+            stroke-opacity: 0.6;
+        }
+        .node-label {
+            font-size: 12px;
+        }
+        .context-menu {
+            position: fixed;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .context-menu button {
+            display: block;
+            width: 100%;
+            padding: 5px 10px;
+            background: none;
+            border: none;
+            color: #333;
+            cursor: pointer;
+        }
+        .context-menu button:hover {
+            background: #f0f0f0;
+        }
+        .node:hover {
+            cursor: pointer;
+            fill: #45a049;
+        }
+        input, button {
+            margin: 5px 0;
+            padding: 8px;
+            width: 100%;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #graph-controls {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        select {
+            margin: 5px 0;
+            padding: 8px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <div id="graph-controls">
+            <div class="control-group">
+                <h3>Save/Load Graph</h3>
+                <input type="text" id="save-name" placeholder="Enter graph name">
+                <button onclick="saveGraph()">Save Current Graph</button>
+                <select id="load-graph" onchange="loadSelectedGraph()">
+                    <option value="">Select a saved graph</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Add Node</h3>
+            <input type="text" id="node-label" placeholder="Enter node label">
+            <button onclick="addNode()">Add Node</button>
+        </div>
+        
+        <div class="control-group">
+            <h3>Connect Nodes</h3>
+            <input type="text" id="source-node" placeholder="Source node">
+            <input type="text" id="target-node" placeholder="Target node">
+            <button onclick="addEdge()">Connect Nodes</button>
+        </div>
+    </div>
+    <div id="graph-container"></div>
+
+    <script>
+        let simulation;
+        const width = window.innerWidth - 300;
+        const height = window.innerHeight;
+        let contextMenu = null;
+
+        // Create context menu
+        function createContextMenu(x, y, nodeId) {
+            // Remove existing context menu if any
+            removeContextMenu();
+            
+            // Create new context menu
+            contextMenu = document.createElement('div');
+            contextMenu.className = 'context-menu';
+            contextMenu.style.left = x + 'px';
+            contextMenu.style.top = y + 'px';
+            
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete Node';
+            deleteButton.onclick = () => {
+                deleteNode(nodeId);
+                removeContextMenu();
+            };
+            
+            contextMenu.appendChild(deleteButton);
+            document.body.appendChild(contextMenu);
+        }
+
+        function removeContextMenu() {
+            if (contextMenu) {
+                contextMenu.remove();
+                contextMenu = null;
+            }
+        }
+
+        // Click handler to remove context menu when clicking outside
+        document.addEventListener('click', (event) => {
+            if (contextMenu && !contextMenu.contains(event.target)) {
+                removeContextMenu();
+            }
+        });
+
+        function deleteNode(nodeId) {
+            fetch(`/api/node/${nodeId}`, {
+                method: 'DELETE',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateGraph();
+                }
+            });
+        }
+
+        const svg = d3.select("#graph-container")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        function updateGraph() {
+            removeContextMenu();  // Remove any existing context menu
+            fetch('/api/nodes')
+                .then(response => response.json())
+                .then(data => {
+                    // Clear existing graph
+                    svg.selectAll("*").remove();
+
+                    simulation = d3.forceSimulation(data.nodes)
+                        .force("link", d3.forceLink(data.edges)
+                            .id(d => d.id)
+                            .distance(100))
+                        .force("charge", d3.forceManyBody().strength(-200))
+                        .force("center", d3.forceCenter(width / 2, height / 2));
+
+                    // Draw edges
+                    const links = svg.append("g")
+                        .selectAll("line")
+                        .data(data.edges)
+                        .enter()
+                        .append("line")
+                        .attr("class", "link");
+
+                    // Draw nodes
+                    const nodes = svg.append("g")
+                        .selectAll("circle")
+                        .data(data.nodes)
+                        .enter()
+                        .append("circle")
+                        .attr("class", "node")
+                        .attr("r", 10)
+                        .on("contextmenu", function(event, d) {
+                            event.preventDefault();
+                            createContextMenu(event.pageX, event.pageY, d.id);
+                        })
+                        .call(d3.drag()
+                            .on("start", dragstarted)
+                            .on("drag", dragged)
+                            .on("end", dragended));
+
+                    // Add labels
+                    const labels = svg.append("g")
+                        .selectAll("text")
+                        .data(data.nodes)
+                        .enter()
+                        .append("text")
+                        .attr("class", "node-label")
+                        .text(d => d.label)
+                        .attr("dx", 12)
+                        .attr("dy", 4);
+
+                    simulation.on("tick", () => {
+                        links
+                            .attr("x1", d => d.source.x)
+                            .attr("y1", d => d.source.y)
+                            .attr("x2", d => d.target.x)
+                            .attr("y2", d => d.target.y);
+
+                        nodes
+                            .attr("cx", d => d.x)
+                            .attr("cy", d => d.y);
+
+                        labels
+                            .attr("x", d => d.x)
+                            .attr("y", d => d.y);
+                    });
+                });
+        }
+
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        function addNode() {
+            const label = document.getElementById("node-label").value;
+            if (!label) return;
+
+            fetch('/api/node', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: label,
+                    attributes: { label: label }
+                }),
+            })
+            .then(() => {
+                document.getElementById("node-label").value = "";
+                updateGraph();
+            });
+        }
+
+        function addEdge() {
+            const source = document.getElementById("source-node").value;
+            const target = document.getElementById("target-node").value;
+            if (!source || !target) return;
+
+            fetch('/api/edge', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    source: source,
+                    target: target
+                }),
+            })
+            .then(() => {
+                document.getElementById("source-node").value = "";
+                document.getElementById("target-node").value = "";
+                updateGraph();
+            });
+        }
+
+        // Load available graphs
+        function updateGraphList() {
+            fetch('/api/graphs')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('load-graph');
+                    // Clear existing options except the first one
+                    while (select.options.length > 1) {
+                        select.remove(1);
+                    }
+                    // Add new options
+                    data.graphs.forEach(graph => {
+                        const option = document.createElement('option');
+                        option.value = graph;
+                        option.textContent = graph;
+                        select.appendChild(option);
+                    });
+                });
+        }
+
+        function saveGraph() {
+            const name = document.getElementById('save-name').value.trim();
+            if (!name) {
+                alert('Please enter a name for the graph');
+                return;
+            }
+            
+            fetch('/api/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: name }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Graph saved successfully!');
+                    document.getElementById('save-name').value = '';
+                    updateGraphList();
+                }
+            });
+        }
+
+        function loadSelectedGraph() {
+            const select = document.getElementById('load-graph');
+            const selectedGraph = select.value;
+            
+            if (!selectedGraph) return;
+            
+            fetch(`/api/load/${selectedGraph}`, {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateGraph();
+                }
+            });
+        }
+
+        // Initial graph load
+        updateGraph();
+
+        // Initial load of graph list
+        updateGraphList();
+    </script>
+</body>
+</html>
